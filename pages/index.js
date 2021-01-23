@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import ProductList from '../components/Index/ProductList';
 
 function Home({ products }) {
   // React.useEffect(() => {
@@ -12,7 +13,7 @@ function Home({ products }) {
   //   console.log(response);
   // }
 
-  return <>home</>;
+  return <ProductList products={products} />;
 }
 
 Home.getInitialProps = async () => {
