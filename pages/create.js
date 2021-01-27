@@ -1,5 +1,7 @@
 import React from 'react';
 import { Form, Input, TextArea, Button, Image, Message, Header, Icon } from 'semantic-ui-react';
+import axios from 'axios';
+import baseUrl from '../utils/baseUrl';
 
 const INITIAL_PRODUCT = {
   name: "",
@@ -12,6 +14,7 @@ function CreateProduct() {
   const [product, setProduct] = React.useState(INITIAL_PRODUCT)
   const [mediaPreview, setMediaPreview] = React.useState('')
   const [success, setSuccess] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   function handleChange(event) {
     const { name, value, files } = event.target;
@@ -23,9 +26,27 @@ function CreateProduct() {
     }
   }
 
-  function handleSubmit(event) {
+  async function handleImageUpload() {
+    const data = new FormData();
+    data.append('file', product.media);
+    data.append('upload_preset', 'reactreserve');
+    data.append('cloud_name', 'ohm-solutions');
+    const response = await axios.post(process.env.CLOUDINARY_URL, data);
+    const mediaUrl = response.data.url;
+    return mediaUrl;
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    console.log(product);
+    setLoading(true);
+    const mediaUrl = await handleImageUpload();
+    console.log(mediaUrl);
+    const url = `${baseUrl}/api/product`;
+    const { name, price, description } = product;
+    const payload = { name, price, description, mediaUrl };
+    const response = await axios.post(url, payload);
+    console.log(response);
+    setLoading(false);
     setProduct(INITIAL_PRODUCT);
     setSuccess(true);
   }
@@ -36,7 +57,7 @@ function CreateProduct() {
         <Icon name="add" color="orange" />
         Create New Product
       </Header>
-      <Form success={success} onSubmit={handleSubmit} >
+      <Form loading={loading} success={success} onSubmit={handleSubmit} >
         <Message success icon="check" header="Success!" content="Your product has been added." />
         <Form.Group widths="equal">
           <Form.Field control={Input} name="name" label="Name" placeholder="Name" onChange={handleChange} value={product.name} />
@@ -45,7 +66,7 @@ function CreateProduct() {
         </Form.Group>
         <Image src={mediaPreview} rounded centered size="small" />
         <Form.Field control={TextArea} name="description" label="Description" placeholder="Description" onChange={handleChange} value={product.description} />
-        <Form.Field control={Button} color="blue" icon="pencil alternative" content="Submit" type="submit" />
+        <Form.Field control={Button} disabled={loading} color="blue" icon="pencil alternate" content="Submit" type="submit" />
       </Form>
     </>
   )
